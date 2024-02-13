@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Http;
 using System.Net;
 using System.Threading.Tasks;
 
-namespace Ledger
+namespace UserRegister
 {
     public class Function : IHttpFunction
     {
@@ -14,11 +14,7 @@ namespace Ledger
         /// <returns>A task representing the asynchronous operation.</returns>
         public async Task HandleAsync(HttpContext context)
         {
-            if (context.Request.Method == "GET")
-            {
-
-            }
-            else if (context.Request.Method == "POST")
+            if (context.Request.Method == "POST")
             {
 
             }

@@ -1,8 +1,9 @@
 using Google.Cloud.Functions.Framework;
 using Microsoft.AspNetCore.Http;
+using System.Net;
 using System.Threading.Tasks;
 
-namespace User
+namespace UserRenew
 {
     public class Function : IHttpFunction
     {
@@ -13,7 +14,15 @@ namespace User
         /// <returns>A task representing the asynchronous operation.</returns>
         public async Task HandleAsync(HttpContext context)
         {
-            await context.Response.WriteAsync("Hello, Functions Framework.");
+            if (context.Request.Method == "POST")
+            {
+
+            }
+            else
+            {
+                context.Response.StatusCode = (int)HttpStatusCode.MethodNotAllowed;
+                await context.Response.CompleteAsync();
+            }
         }
     }
 }
