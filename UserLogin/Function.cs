@@ -8,6 +8,9 @@ using System.Threading.Tasks;
 using System.Xml.Linq;
 using System.IO;
 using System.Text.Json;
+using Isopoh.Cryptography.Argon2;
+using System.Text;
+using System;
 
 namespace UserLogin
 {
@@ -25,14 +28,34 @@ namespace UserLogin
                 var client = new MongoClient("connectionString");
                 var users = client.GetDatabase("databaseName").GetCollection<User>("userCollectionName");
 
+                AuthForm content = null;
                 using (MemoryStream ms = new MemoryStream())
                 {
                     await context.Request.Body.CopyToAsync(ms);
                     ms.Seek(0, SeekOrigin.Begin);
-                    var content = await JsonSerializer.DeserializeAsync(ms);
+                    content = await JsonSerializer.DeserializeAsync<AuthForm>(ms);
                 }
 
-                users.Find(user => user.UserName == name).FirstOrDefault();
+                var user = users.Find(user => user.UserName == content.UserName).FirstOrDefault();
+                if (user != null)
+                {
+                    context.Response.StatusCode = (int)HttpStatusCode.Unauthorized;
+                    await context.Response.CompleteAsync();
+                    return;
+                }
+
+                var argon2Config = new Argon2Config
+                {
+                    Threads = Environment.ProcessorCount,
+                    Password = Encoding.UTF8.GetBytes(content.Password),
+                    Salt = user.Salt,
+                    HashLength = 128
+                };
+                if (Argon2.Verify(content.Password, argon2Config))
+                {
+                    var accessToken = Auth.GenerateJWToken(_config, user.UserName);
+                    var refreshToken = Auth.GenerateRefreshToken(_config, user.UserName);
+                }
             }
             else
             {
